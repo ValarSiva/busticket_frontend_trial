@@ -1,0 +1,80 @@
+---
+    name: Build and Push NodeJS Image to AWS ECR
+    on:
+      push:
+        branches: [ main ]
+    jobs:
+      build-and-push:
+        name: Build and Push to ECR
+        runs-on: ubuntu-latest
+        steps:
+        - name: Checkout
+          uses: actions/checkout@v2
+    
+        - name: Configure AWS credentials
+          uses: aws-actions/configure-aws-credentials@v1
+          with:
+            aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_ECR }}
+            aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_ECR }}
+            aws-region: ap-south-1
+    
+        - name: Login to Amazon ECR
+          id: login-ecr
+          uses: aws-actions/amazon-ecr-login@v1
+    
+        - name: Automatic Tagging of Releases
+          id: increment-git-tag
+          run: |
+            bash ./build/git_update.sh -v major
+    
+        - name: Build, Tag, and Push the Image to Amazon ECR
+          id: build-image
+          env:
+            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+            ECR_REPOSITORY: bus_ticket_system_frontend_trial
+            IMAGE_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+          run: |
+            docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+            docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+              
+        - name: Install Elastic Beanstalk CLI
+          run: |
+            sudo apt-get update
+            sudo apt-get install -y python3-pip
+            pip3 install awsebcli --upgrade --user
+            export PATH=$PATH:$HOME/.local/bin
+            
+        - name: Deploy to Elastic Beanstalk
+          env:
+            AWS_REGION: ap-south-1
+            ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+            ECR_REPOSITORY: bus_ticket_system_frontend_trial
+            IMAGE_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
+          run: |
+            EB_ENV_NAME="Busticketsystemfrontendtrial-env"
+            EB_APP_NAME="bus_ticket_system_frontend_trial"
+            EB_DOCKER_IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+
+            # Create Dockerrun.aws.json file
+            cat <<EOF > Dockerrun.aws.json
+            {
+              "AWSEBDockerrunVersion": "1",
+              "Image": {
+                "Name": "${EB_DOCKER_IMAGE}",
+                "Update": "true"
+              },
+              "Ports": [
+                {
+                  "ContainerPort": 3000,
+                  "HostPort": 3000
+                }
+              ],
+              "Volumes": [],
+              "Logging": "/var/log/nginx"
+            }
+            EOF
+
+            # Deploy to Elastic Beanstalk
+            eb init -p docker "${EB_APP_NAME}" --region "${AWS_REGION}"
+            eb use "${EB_ENV_NAME}"
+            eb deploy --staged
