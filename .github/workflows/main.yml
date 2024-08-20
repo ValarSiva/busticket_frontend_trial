@@ -1,5 +1,5 @@
 ---
-    name: Build and Push NodeJS Image to AWS ECR
+    name: Build and Push ReactJS Image to AWS ECR
     on:
       push:
         branches: [ main ]
@@ -65,8 +65,8 @@
               },
               "Ports": [
                 {
-                  "ContainerPort": 3000,
-                  "HostPort": 3000
+                  "ContainerPort": 5000,
+                  "HostPort": 5000
                 }
               ],
               "Volumes": [],
