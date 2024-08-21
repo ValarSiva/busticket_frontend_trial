@@ -1,70 +1,85 @@
-# Getting Started with Create React App
+Bus Ticket System CI/CD pipeline (Single container application):
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+create folder: "bus_ticket_system_trial"
+In cmd:
+D:/Docker/bus_ticket_system_trial>git clone git@github.com:/ValarSiva/busticket_frontend_trial 
+D:/Docker/bus_ticket_system_trial/busticket_frontend_trial>git init
+D:/Docker/bus_ticket_system_trial/busticket_frontend_trial>git commit -m "first commit"
+D:/Docker/bus_ticket_system_trial/busticket_frontend_trial>git add .
+D:/Docker/bus_ticket_system_trial/busticket_frontend_trial>git commit -m "first commit"
+D:/Docker/bus_ticket_system_trial/busticket_frontend_trial>git push -u origin main
+In VS code: create "Dockerfile"
+Create folder ".github". create subfolder "workflow" under ".github".
+Create file "main.yml" under "workflow"
+create "build" folder.
+Create "git_update.sh" under "build"
+Create react-app (npx create-react-app .)
+create ECR repo "front_end" (private) => "create repository"
+IAM=>Policies=>create policy=>json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Action": [
+                "elasticbeanstalk:CreateApplicationVersion",
+                "elasticbeanstalk:UpdateEnvironment",
+                "elasticbeanstalk:DescribeEnvironments",
+                "elasticbeanstalk:DescribeApplicationVersions",
+                "elasticbeanstalk:ListAvailableSolutionStacks",
+                "elasticbeanstalk:CreateStorageLocation",
+                "elasticbeanstalk:DescribeApplications",
+                "elasticbeanstalk:DescribeConfigurationOptions",
+                "elasticbeanstalk:ValidateConfigurationSettings"
+            ],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": "s3:*",
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage",
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetAuthorizationToken",
+                "ecr:DescribeRepositories",
+                "ecr:ListImages"
+            ],
+            "Resource": "arn:aws:ecr:ap-south-1:058264377207:repository/front_end"
+        },
+        {
+            "Effect": "Allow",
+            "Action": [
+                "iam:PassRole"
+            ],
+            "Resource": "arn:aws:iam::058264377207:role/front_end_dev"
+        }
+    ]
+}
+Give policy name "front_end_additional_policy" => create policy
+IAM=>User Group=>create=>"	
+front_end_group" (group name) => Add permission ("front_end_additional_policy", AdministratorAccess-AWSElasticBeanstalk 
+and "AmazonEC2ContainerRegistryFullAccess")
+IAM=>users=>Add_user=>"front_end_dev"(user name)=> "Add user to group"=>
+select "front_end_group" group =>create user
+Create Accesskey id for this user(front_end_dev)
+Add secrets in github(settings=>secret variables=>actions=>new repository)
+git status
+git add .
+git commit -a -m "third commit"
+git push -u origin main
+git status
 
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+deployment to ebs:
+create ebs application "front_end"
+create ebs environment: "Frontend-env"
+    platform "Docker"=>"Docker running on 64bit Amazon Linux 2"
+    EC2 instance role(front_end_ec2_role)=>AWSElasticBeanstalkMulticontainerDocker,AWSElasticBeanstalkWebTier,
+     AWSElasticBeanstalkWorkerTier
+    ElasticBeanStalk service role(front_end_service_role):AWSElasticBeanstalkEnhancedHealth,AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy and AWSElasticBeanstalkService
+  Update main.yml file for EBS deployment
+  Now push to github

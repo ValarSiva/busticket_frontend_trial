@@ -4,7 +4,7 @@ function App() {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/message')
+    fetch('http://busticketsystembacendtrial-env.eba-yadyumpe.ap-south-1.elasticbeanstalk.com/api/message')
       .then(response => response.json())
       .then(data => setMessage(data.message));
   }, []);
