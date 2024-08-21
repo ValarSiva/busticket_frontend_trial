@@ -51,7 +51,7 @@
             ECR_REPOSITORY: front_end
             IMAGE_TAG: ${{ steps.increment-git-tag.outputs.git-tag }}
           run: |
-            EB_ENV_NAME="Frontend-env"
+            EB_ENV_NAME="Frontend-env-1"
             EB_APP_NAME="front_end"
             EB_DOCKER_IMAGE="${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
 
